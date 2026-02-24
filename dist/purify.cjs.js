@@ -602,7 +602,7 @@ function createDOMPurify() {
     /* Parse profile info */
     if (USE_PROFILES) {
       ALLOWED_TAGS = addToSet({}, text);
-      ALLOWED_ATTR = [];
+      ALLOWED_ATTR = create(null);
       if (USE_PROFILES.html === true) {
         addToSet(ALLOWED_TAGS, html$1);
         addToSet(ALLOWED_ATTR, html);
@@ -622,6 +622,13 @@ function createDOMPurify() {
         addToSet(ALLOWED_ATTR, mathMl);
         addToSet(ALLOWED_ATTR, xml);
       }
+    }
+    /* Prevent function-based ADD_ATTR / ADD_TAGS from leaking across calls */
+    if (!objectHasOwnProperty(cfg, 'ADD_TAGS')) {
+      EXTRA_ELEMENT_HANDLING.tagCheck = null;
+    }
+    if (!objectHasOwnProperty(cfg, 'ADD_ATTR')) {
+      EXTRA_ELEMENT_HANDLING.attributeCheck = null;
     }
     /* Merge configuration parameters */
     if (cfg.ADD_TAGS) {
@@ -1020,6 +1027,10 @@ function createDOMPurify() {
    */
   // eslint-disable-next-line complexity
   const _isValidAttribute = function _isValidAttribute(lcTag, lcName, value) {
+    /* FORBID_ATTR must always win, even if ADD_ATTR predicate would allow it */
+    if (FORBID_ATTR[lcName]) {
+      return false;
+    }
     /* Make sure attribute cannot clobber */
     if (SANITIZE_DOM && (lcName === 'id' || lcName === 'name') && (value in document || value in formElement)) {
       return false;
