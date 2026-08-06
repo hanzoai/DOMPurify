@@ -1,0 +1,11 @@
+# Canonical CI/CD config for hanzoai/DOMPurify — read by hanzoai/ci (via
+# .hanzo/workflows/cicd.yml) and by platform.hanzo.ai.
+#
+# Library (npm). Two things must hold and both are gated: the bundle builds
+# (tsc emits the types, rollup emits every dist format), and the sanitizer
+# still sanitizes — test:jsdom is the full XSS corpus run in jsdom, no browser
+# needed. The playwright browser suites stay out of the gate; they need a
+# browser download and test the same corpus through a second DOM.
+test:
+  - name: build-and-sanitize
+    run: npm ci --no-audit --no-fund && npm run build && npm run test:jsdom
